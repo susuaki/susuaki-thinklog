@@ -54,7 +54,7 @@
     document.getElementById('entry-form').addEventListener('submit', e => {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(e.target));
-      if (Object.values(data).every(value => value.trim() === '')) return; // 全部空なら無視
+      if (Object.values(data).every(value => value.trim() === '')) return;
       const tx = db.transaction(storeName, 'readwrite');
       tx.objectStore(storeName).add({ ...data, date: new Date().toISOString() });
       tx.oncomplete = () => {
@@ -82,12 +82,21 @@
               <li><strong>違和感:</strong> ${entry.doubt}</li>
               <li><strong>アイデア:</strong> ${entry.idea}</li>
             </ul>
+            <button class="delete-button" data-id="${entry.id}">削除</button>
           </details>
         `).join('');
+
+        document.querySelectorAll('.delete-button').forEach(button => {
+          button.addEventListener('click', e => {
+            const id = Number(e.target.dataset.id);
+            const tx = db.transaction(storeName, 'readwrite');
+            tx.objectStore(storeName).delete(id);
+            tx.oncomplete = () => loadEntries();
+          });
+        });
       };
     }
 
-    // PWA: Service Worker登録コード
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js');
