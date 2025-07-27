@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <title>ススアキ日記</title>
+</head>
+<body>
+  <main>
+    <h1>ススアキ日記</h1>
+    <form id="entry-form">
+      <label>📌 今日の仮説
+        <textarea name="hypothesis" placeholder="仮説があれば記入"></textarea>
+      </label>
+      <label>🧩 小さな選択と理由
+        <textarea name="decision" placeholder="小さな選択と理由"></textarea>
+      </label>
+      <label>🧠 気になった言葉／問い
+        <textarea name="quote" placeholder="気になった言葉や問い"></textarea>
+      </label>
+      <label>🔁 実験してみたこと
+        <textarea name="experiment" placeholder="試したことがあれば記入"></textarea>
+      </label>
+      <label>📉 違和感 or 疑問
+        <textarea name="doubt" placeholder="モヤッとしたことなど"></textarea>
+      </label>
+      <label>💡 アイデアの種
+        <textarea name="idea" placeholder="思いついたことがあれば"></textarea>
+      </label>
+      <button type="submit">保存</button>
+    </form>
+    <section id="entries"></section>
+  </main>
+  <script>
+    const dbName = 'SusuakiDiaryDB';
+    const storeName = 'entries';
+
+    let db;
+    const request = indexedDB.open(dbName, 1);
+
+    request.onupgradeneeded = event => {
+      db = event.target.result;
+      db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+    };
+
+    request.onsuccess = event => {
+      db = event.target.result;
+      loadEntries();
+    };
+
+    document.getElementById('entry-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      if (Object.values(data).every(value => value.trim() === '')) return; // 全部空なら無視
+      const tx = db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).add({ ...data, date: new Date().toISOString() });
+      tx.oncomplete = () => {
+        e.target.reset();
+        loadEntries();
+      };
+    });
+
+    function loadEntries() {
+      const tx = db.transaction(storeName, 'readonly');
+      const store = tx.objectStore(storeName);
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const entries = request.result.reverse();
+        const container = document.getElementById('entries');
+        container.innerHTML = entries.map(entry => `
+          <details>
+            <summary>${new Date(entry.date).toLocaleString()}</summary>
+            <ul>
+              <li><strong>仮説:</strong> ${entry.hypothesis}</li>
+              <li><strong>選択と理由:</strong> ${entry.decision}</li>
+              <li><strong>問い:</strong> ${entry.quote}</li>
+              <li><strong>実験:</strong> ${entry.experiment}</li>
+              <li><strong>違和感:</strong> ${entry.doubt}</li>
+              <li><strong>アイデア:</strong> ${entry.idea}</li>
+            </ul>
+          </details>
+        `).join('');
+      };
+    }
+  </script>
+</body>
+</html>
