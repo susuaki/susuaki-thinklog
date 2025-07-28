@@ -32,6 +32,13 @@
       </label>
       <button type="submit">保存</button>
     </form>
+
+    <div style="margin-top: 1rem">
+      <label>📅 開始日：<input type="date" id="start-date"></label>
+      <label>📅 終了日：<input type="date" id="end-date"></label>
+      <button id="export-button">記録をエクスポートして削除</button>
+    </div>
+
     <section id="entries"></section>
   </main>
   <script>
@@ -60,6 +67,44 @@
       tx.oncomplete = () => {
         e.target.reset();
         loadEntries();
+      };
+    });
+
+    document.getElementById('export-button').addEventListener('click', () => {
+      const startInput = document.getElementById('start-date').value;
+      const endInput = document.getElementById('end-date').value;
+      if (!startInput || !endInput) return alert('日付を正しく指定してください');
+
+      const start = new Date(startInput);
+      const end = new Date(endInput);
+      end.setHours(23, 59, 59, 999); // 終了日をその日の終わりまで拡張
+
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      const getRequest = store.getAll();
+
+      getRequest.onsuccess = () => {
+        const allEntries = getRequest.result;
+        const matched = allEntries.filter(e => {
+          const d = new Date(e.date);
+          return d >= start && d <= end;
+        });
+
+        if (matched.length === 0) return alert('指定範囲の記録が見つかりません');
+
+        const blob = new Blob([JSON.stringify(matched, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `susuaki-diary-${start.toISOString().split('T')[0]}_to_${end.toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        matched.forEach(entry => {
+          store.delete(entry.id);
+        });
+
+        tx.oncomplete = () => loadEntries();
       };
     });
 
