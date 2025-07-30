@@ -30,6 +30,9 @@
       <label>💡 アイデアの種
         <textarea name="idea" placeholder="思いついたことがあれば"></textarea>
       </label>
+      <label>📝 その他メモや気づき
+        <textarea name="notes" placeholder="自由に記録したいことがあれば"></textarea>
+      </label>
       <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
         <button type="reset">キャンセル</button>
         <button type="submit">保存</button>
@@ -132,6 +135,7 @@
               <li><strong>実験:</strong> ${entry.experiment}</li>
               <li><strong>違和感:</strong> ${entry.doubt}</li>
               <li><strong>アイデア:</strong> ${entry.idea}</li>
+              <li><strong>メモ:</strong> ${entry.notes}</li>
             </ul>
             <button class="delete-button" data-id="${entry.id}">削除</button>
           </details>
