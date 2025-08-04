@@ -6,11 +6,11 @@
   <meta name="theme-color" content="#ffffff" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <title>ススアキ日記</title>
+  <title>ThinkLog</title>
 </head>
 <body>
   <main>
-    <h1>ススアキ日記</h1>
+    <h1>ThinkLog</h1>
     <form id="entry-form">
       <label>📌 今日の仮説
         <textarea name="hypothesis" placeholder="仮説があれば記入"></textarea>
@@ -102,7 +102,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `susuaki-diary-${start.toISOString().split('T')[0]}_to_${end.toISOString().split('T')[0]}.json`;
+        a.download = `thinklog-data-${start.toISOString().split('T')[0]}_to_${end.toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
 

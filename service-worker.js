@@ -1,4 +1,4 @@
-const CACHE_NAME = 'susuaki-diary-cache-v1';
+const CACHE_NAME = 'thinklog-cache-v1';
 const urlsToCache = ['/', '/index.html'];
 
 self.addEventListener('install', event => {
