@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
   <meta name="theme-color" content="#ffffff" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
@@ -125,29 +126,46 @@
       request.onsuccess = () => {
         const entries = request.result.reverse();
         const container = document.getElementById('entries');
-        container.innerHTML = entries.map(entry => `
-          <details>
-            <summary>${new Date(entry.date).toLocaleString()}</summary>
-            <ul>
-              <li><strong>仮説:</strong> ${entry.hypothesis}</li>
-              <li><strong>選択と理由:</strong> ${entry.decision}</li>
-              <li><strong>問い:</strong> ${entry.quote}</li>
-              <li><strong>実験:</strong> ${entry.experiment}</li>
-              <li><strong>違和感:</strong> ${entry.doubt}</li>
-              <li><strong>アイデア:</strong> ${entry.idea}</li>
-              <li><strong>メモ:</strong> ${entry.notes}</li>
-            </ul>
-            <button class="delete-button" data-id="${entry.id}">削除</button>
-          </details>
-        `).join('');
+        container.innerHTML = ''; // Clear previous entries
 
-        document.querySelectorAll('.delete-button').forEach(button => {
-          button.addEventListener('click', e => {
+        entries.forEach(entry => {
+          const details = document.createElement('details');
+          const summary = document.createElement('summary');
+          summary.textContent = new Date(entry.date).toLocaleString();
+
+          const ul = document.createElement('ul');
+          const createLi = (label, text) => {
+            const li = document.createElement('li');
+            const strong = document.createElement('strong');
+            strong.textContent = `${label}: `;
+            li.appendChild(strong);
+            li.appendChild(document.createTextNode(text || ''));
+            return li;
+          };
+
+          ul.appendChild(createLi('仮説', entry.hypothesis));
+          ul.appendChild(createLi('選択と理由', entry.decision));
+          ul.appendChild(createLi('問い', entry.quote));
+          ul.appendChild(createLi('実験', 'experiment'));
+          ul.appendChild(createLi('違和感', entry.doubt));
+          ul.appendChild(createLi('アイデア', entry.idea));
+          ul.appendChild(createLi('メモ', entry.notes));
+
+          const deleteButton = document.createElement('button');
+          deleteButton.className = 'delete-button';
+          deleteButton.dataset.id = entry.id;
+          deleteButton.textContent = '削除';
+          deleteButton.addEventListener('click', e => {
             const id = Number(e.target.dataset.id);
             const tx = db.transaction(storeName, 'readwrite');
             tx.objectStore(storeName).delete(id);
             tx.oncomplete = () => loadEntries();
           });
+
+          details.appendChild(summary);
+          details.appendChild(ul);
+          details.appendChild(deleteButton);
+          container.appendChild(details);
         });
       };
     }
