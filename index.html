@@ -99,21 +99,29 @@
 
         if (matched.length === 0) return alert('指定範囲の記録が見つかりません');
 
-        const blob = new Blob([JSON.stringify(matched, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `thinklog-data-${start.toISOString().split('T')[0]}_to_${end.toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        try {
+          const blob = new Blob([JSON.stringify(matched, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `thinklog-data-${start.toISOString().split('T')[0]}_to_${end.toISOString().split('T')[0]}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
 
-        if (confirm('ファイルは保存できましたか？該当記録を削除してもよいですか？')) {
-          const deleteTx = db.transaction(storeName, 'readwrite');
-          const deleteStore = deleteTx.objectStore(storeName);
-          matched.forEach(entry => {
-            deleteStore.delete(entry.id);
-          });
-          deleteTx.oncomplete = () => loadEntries();
+          setTimeout(() => {
+            if (confirm('ファイルは保存できましたか？該当記録を削除してもよいですか？')) {
+              const deleteTx = db.transaction(storeName, 'readwrite');
+              const deleteStore = deleteTx.objectStore(storeName);
+              matched.forEach(entry => {
+                deleteStore.delete(entry.id);
+              });
+              deleteTx.oncomplete = () => loadEntries();
+            }
+          }, 1000);
+        } catch (error) {
+          alert('エクスポートに失敗しました: ' + error.message);
         }
       };
     });
@@ -131,7 +139,7 @@
         entries.forEach(entry => {
           const details = document.createElement('details');
           const summary = document.createElement('summary');
-          summary.textContent = new Date(entry.date).toLocaleString();
+          summary.textContent = new Date(entry.date).toLocaleString('ja-JP', {timeZone: 'Asia/Tokyo'});
 
           const ul = document.createElement('ul');
           const createLi = (label, text) => {
@@ -146,7 +154,7 @@
           ul.appendChild(createLi('仮説', entry.hypothesis));
           ul.appendChild(createLi('選択と理由', entry.decision));
           ul.appendChild(createLi('問い', entry.quote));
-          ul.appendChild(createLi('実験', 'experiment'));
+          ul.appendChild(createLi('実験', entry.experiment));
           ul.appendChild(createLi('違和感', entry.doubt));
           ul.appendChild(createLi('アイデア', entry.idea));
           ul.appendChild(createLi('メモ', entry.notes));
